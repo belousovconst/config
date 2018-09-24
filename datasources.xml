@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:property-placeholder location="classpath:application.yml" />
+
+    <bean id="coreConfigMaster" class="com.zaxxer.hikari.HikariConfig">
+        <property name="jdbcUrl" value="${databases.general.master.jdbcUrl}" />
+        <property name="username" value="${databases.general.master.username}" />
+        <property name="password" value="${databases.general.master.password}" />
+    </bean>
+
+    <bean id="master-coreDataSource" name="master-core" class="com.redsys.ejb.configs.helper.NameDataSource" destroy-method="close">
+        <constructor-arg ref="coreConfigMaster" />
+        <constructor-arg value="master-core" />
+    </bean>
+
+    <bean id="coreConfigSlave" class="com.zaxxer.hikari.HikariConfig">
+        <property name="jdbcUrl" value="${databases.general.slave.jdbcUrl}" />
+        <property name="username" value="${databases.general.slave.username}" />
+        <property name="password" value="${databases.general.slave.password}" />
+    </bean>
+
+    <bean id="slave-coreDataSource" name="slave-core" class="com.redsys.ejb.configs.helper.NameDataSource" destroy-method="close">
+        <constructor-arg ref="coreConfigSlave" />
+        <constructor-arg value="slave-core" />
+    </bean>
+
+    <bean id="shard1ConfigMaster" class="com.zaxxer.hikari.HikariConfig">
+        <property name="jdbcUrl" value="${databases.shard1.master.jdbcUrl}" />
+        <property name="username" value="${databases.shard1.master.username}" />
+        <property name="password" value="${databases.shard1.master.password}" />
+    </bean>
+
+    <bean id="master-shard1DataSource" name="master-shard1" class="com.redsys.ejb.configs.helper.NameDataSource" destroy-method="close">
+        <constructor-arg ref="shard1ConfigMaster" />
+        <constructor-arg value="master-shard1" />
+    </bean>
+
+    <bean id="shard1ConfigSlave" class="com.zaxxer.hikari.HikariConfig">
+        <property name="jdbcUrl" value="${databases.shard1.slave.jdbcUrl}" />
+        <property name="username" value="${databases.shard1.slave.username}" />
+        <property name="password" value="${databases.shard1.slave.password}" />
+    </bean>
+
+    <bean id="slave-shard1DataSource" name="slave-shard1" class="com.redsys.ejb.configs.helper.NameDataSource" destroy-method="close">
+        <constructor-arg ref="shard1ConfigSlave" />
+        <constructor-arg value="slave-shard1" />
+    </bean>
+
+    <bean id="shard2ConfigMaster" class="com.zaxxer.hikari.HikariConfig">
+        <property name="jdbcUrl" value="${databases.shard2.master.jdbcUrl}" />
+        <property name="username" value="${databases.shard2.master.username}" />
+        <property name="password" value="${databases.shard2.master.password}" />
+    </bean>
+
+    <bean id="master-shard2DataSource" name="master-shard2" class="com.redsys.ejb.configs.helper.NameDataSource" destroy-method="close">
+        <constructor-arg ref="shard2ConfigMaster" />
+        <constructor-arg value="master-shard2" />
+    </bean>
+
+    <bean id="shard2ConfigSlave" class="com.zaxxer.hikari.HikariConfig">
+        <property name="jdbcUrl" value="${databases.shard2.slave.jdbcUrl}" />
+        <property name="username" value="${databases.shard2.slave.username}" />
+        <property name="password" value="${databases.shard2.slave.password}" />
+    </bean>
+
+    <bean id="slave-shard2DataSource" name="slave-shard2" class="com.redsys.ejb.configs.helper.NameDataSource" destroy-method="close">
+        <constructor-arg ref="shard2ConfigSlave" />
+        <constructor-arg value="slave-shard2" />
+    </bean>
+
+    <bean id="dataSource" class="com.redsys.ejb.configs.helper.DataSourceRouter">
+        <constructor-arg value="master-core" />
+        <constructor-arg>
+            <list>
+                <ref bean="master-coreDataSource"/>
+                <ref bean="slave-coreDataSource"/>
+                <ref bean="master-shard1DataSource"/>
+                <ref bean="slave-shard1DataSource"/>
+                <ref bean="master-shard2DataSource"/>
+                <ref bean="slave-shard2DataSource"/>
+            </list>
+        </constructor-arg>
+    </bean>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+</beans>
